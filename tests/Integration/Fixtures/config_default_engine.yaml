@@ -1,0 +1,7 @@
+symkit_search:
+    default_engine: admin
+    engines:
+        main:
+            ui: true
+        admin:
+            ui: false

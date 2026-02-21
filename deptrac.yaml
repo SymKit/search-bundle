@@ -14,6 +14,14 @@ deptrac:
           collectors:
             - type: directory
               value: src/DependencyInjection/.*
+        - name: Event
+          collectors:
+            - type: directory
+              value: src/Event/.*
+        - name: Exception
+          collectors:
+            - type: directory
+              value: src/Exception/.*
         - name: Model
           collectors:
             - type: directory
@@ -30,6 +38,8 @@ deptrac:
         Attribute: []
         Contract: [Model]
         DependencyInjection: [Service]
+        Event: [Model]
+        Exception: []
         Model: []
-        Service: [Contract, Model]
+        Service: [Contract, Event, Exception, Model]
         Twig: [Contract, Model]

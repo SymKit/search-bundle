@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Symkit\SearchBundle\Tests\Unit\Service;
 
-use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ServiceLocator;
 use Symkit\SearchBundle\Contract\SearchServiceInterface;
+use Symkit\SearchBundle\Exception\EngineNotFoundException;
 use Symkit\SearchBundle\Service\SearchEngineRegistry;
 
 #[CoversClass(SearchEngineRegistry::class)]
@@ -33,7 +33,7 @@ final class SearchEngineRegistryTest extends TestCase
             'main',
         );
 
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(EngineNotFoundException::class);
         $this->expectExceptionMessage('Search engine "unknown" is not registered. Available engines: main.');
 
         $registry->get('unknown');

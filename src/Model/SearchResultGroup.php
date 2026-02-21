@@ -7,11 +7,11 @@ namespace Symkit\SearchBundle\Model;
 final readonly class SearchResultGroup
 {
     /**
-     * @param iterable<SearchResult> $results
+     * @param array<SearchResult> $results
      */
     public function __construct(
         public string $category,
-        public iterable $results,
+        public array $results,
         public int $priority,
     ) {
     }

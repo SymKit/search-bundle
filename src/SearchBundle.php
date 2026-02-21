@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Symkit\SearchBundle;
 
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
+use Symfony\Component\DependencyInjection\Argument\IteratorArgument;
 use Symfony\Component\DependencyInjection\Argument\ServiceLocatorArgument;
-use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\DependencyInjection\Reference;
@@ -28,6 +28,10 @@ class SearchBundle extends AbstractBundle
     {
         $definition->rootNode()
             ->children()
+                ->scalarNode('default_engine')
+                    ->defaultNull()
+                    ->info('Explicit default engine name. Falls back to the first declared engine.')
+                ->end()
                 ->arrayNode('engines')
                     ->info('Named search engines. Each engine groups its own providers.')
                     ->useAttributeAsKey('name')
@@ -45,11 +49,12 @@ class SearchBundle extends AbstractBundle
     }
 
     /**
-     * @param array{engines: array<string, array{ui: bool}>} $config
+     * @param array{default_engine: string|null, engines: array<string, array{ui: bool}>} $config
      */
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
         $engines = $config['engines'];
+        $defaultEngine = $config['default_engine'] ?? array_key_first($engines);
 
         $builder->setParameter('symkit_search.engines', $engines);
 
@@ -66,29 +71,36 @@ class SearchBundle extends AbstractBundle
         );
 
         $engineRefs = [];
-        $firstEngine = array_key_first($engines);
 
         foreach ($engines as $name => $engineConfig) {
             $serviceId = 'symkit_search.engine.'.$name;
 
-            $builder->register($serviceId, SearchService::class)
-                ->setArgument('$providers', new TaggedIteratorArgument('symkit_search.provider'))
+            $definition = $builder->register($serviceId, SearchService::class)
+                ->setArgument('$providers', new IteratorArgument([]))
+                ->setArgument('$engineName', $name)
             ;
+
+            if (interface_exists(\Symfony\Contracts\EventDispatcher\EventDispatcherInterface::class)) {
+                $definition->setArgument('$dispatcher', new Reference(
+                    \Symfony\Contracts\EventDispatcher\EventDispatcherInterface::class,
+                    ContainerBuilder::NULL_ON_INVALID_REFERENCE,
+                ));
+            }
 
             $engineRefs[$name] = new Reference($serviceId);
         }
 
         $builder->register(SearchEngineRegistry::class)
             ->setArgument('$engines', new ServiceLocatorArgument($engineRefs))
-            ->setArgument('$defaultEngine', $firstEngine)
+            ->setArgument('$defaultEngine', $defaultEngine)
         ;
 
         $builder->setAlias(SearchEngineRegistryInterface::class, SearchEngineRegistry::class)
             ->setPublic(true)
         ;
 
-        if (null !== $firstEngine) {
-            $builder->setAlias(SearchServiceInterface::class, 'symkit_search.engine.'.$firstEngine)
+        if (null !== $defaultEngine) {
+            $builder->setAlias(SearchServiceInterface::class, 'symkit_search.engine.'.$defaultEngine)
                 ->setPublic(true)
             ;
         }

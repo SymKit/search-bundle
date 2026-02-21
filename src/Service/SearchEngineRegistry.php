@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Symkit\SearchBundle\Service;
 
-use InvalidArgumentException;
 use Symfony\Component\DependencyInjection\ServiceLocator;
 use Symkit\SearchBundle\Contract\SearchEngineRegistryInterface;
 use Symkit\SearchBundle\Contract\SearchServiceInterface;
+use Symkit\SearchBundle\Exception\EngineNotFoundException;
 
 final readonly class SearchEngineRegistry implements SearchEngineRegistryInterface
 {
@@ -23,7 +23,7 @@ final readonly class SearchEngineRegistry implements SearchEngineRegistryInterfa
     public function get(string $engine): SearchServiceInterface
     {
         if (!$this->engines->has($engine)) {
-            throw new InvalidArgumentException(\sprintf('Search engine "%s" is not registered. Available engines: %s.', $engine, implode(', ', array_keys($this->engines->getProvidedServices()))));
+            throw EngineNotFoundException::create($engine, array_keys($this->engines->getProvidedServices()));
         }
 
         return $this->engines->get($engine);

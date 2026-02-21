@@ -4,51 +4,84 @@ declare(strict_types=1);
 
 namespace Symkit\SearchBundle\Service;
 
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Symkit\SearchBundle\Contract\SearchProviderInterface;
 use Symkit\SearchBundle\Contract\SearchServiceInterface;
+use Symkit\SearchBundle\Event\PostSearchEvent;
+use Symkit\SearchBundle\Event\PreSearchEvent;
 use Symkit\SearchBundle\Model\SearchResultGroup;
 
 final readonly class SearchService implements SearchServiceInterface
 {
     /**
+     * @var array<SearchProviderInterface>
+     */
+    private array $sortedProviders;
+
+    /**
      * @param iterable<SearchProviderInterface> $providers
      */
     public function __construct(
-        private iterable $providers,
+        iterable $providers,
+        private string $engineName = 'default',
+        private ?EventDispatcherInterface $dispatcher = null,
     ) {
+        $sorted = [...$providers];
+        usort($sorted, static fn (SearchProviderInterface $a, SearchProviderInterface $b): int => $a->getPriority() <=> $b->getPriority());
+        $this->sortedProviders = $sorted;
     }
 
     /**
      * @return iterable<SearchResultGroup>
      */
-    public function search(string $query): iterable
+    public function search(string $query, ?int $maxResults = null): iterable
     {
         if ('' === trim($query)) {
             return;
         }
 
-        foreach ($this->getSortedProviders() as $provider) {
+        if (null !== $this->dispatcher) {
+            $preEvent = new PreSearchEvent($query, $this->engineName);
+            $this->dispatcher->dispatch($preEvent);
+            $query = $preEvent->getQuery();
+
+            if ('' === trim($query)) {
+                return;
+            }
+        }
+
+        $groups = [];
+        $totalResults = 0;
+
+        foreach ($this->sortedProviders as $provider) {
             $resultsArray = [...$provider->search($query)];
 
+            if (null !== $maxResults) {
+                $remaining = $maxResults - $totalResults;
+
+                if ($remaining <= 0) {
+                    break;
+                }
+
+                $resultsArray = \array_slice($resultsArray, 0, $remaining);
+            }
+
             if ([] !== $resultsArray) {
-                yield new SearchResultGroup(
+                $groups[] = new SearchResultGroup(
                     category: $provider->getCategory(),
                     results: $resultsArray,
                     priority: $provider->getPriority(),
                 );
+                $totalResults += \count($resultsArray);
             }
         }
-    }
 
-    /**
-     * @return array<SearchProviderInterface>
-     */
-    private function getSortedProviders(): array
-    {
-        $providers = [...$this->providers];
+        if (null !== $this->dispatcher) {
+            $postEvent = new PostSearchEvent($query, $groups, $this->engineName);
+            $this->dispatcher->dispatch($postEvent);
+            $groups = $postEvent->getResults();
+        }
 
-        usort($providers, static fn (SearchProviderInterface $a, SearchProviderInterface $b): int => $a->getPriority() <=> $b->getPriority());
-
-        return $providers;
+        yield from $groups;
     }
 }

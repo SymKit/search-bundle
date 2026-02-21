@@ -7,14 +7,35 @@ A modern, memory-efficient global search bundle for Symfony applications. Suppor
 - **Multi-engine**: Define multiple search engines (`main`, `admin`, ...) with independent or shared providers.
 - **Memory Efficient**: Uses PHP Generators (`yield`) to handle large result sets without memory spikes.
 - **SOLID Architecture**: Decoupled providers, engines, and services with a Contract-first design.
-- **Ready-to-use UI**: Global search modal built with Symfony UX Live Components and Tailwind CSS.
-- **Lazy Loading**: Providers are only sorted and queried when a search is performed.
+- **Events**: `PreSearchEvent` and `PostSearchEvent` for query modification, result filtering, analytics.
+- **Ready-to-use UI**: Accessible global search modal built with Symfony UX Live Components and Tailwind CSS.
+- **Keyboard Navigation**: `Cmd+K` / `Ctrl+K` to open, arrow keys to navigate, `Enter` to select.
 - **Multi-category**: Group results by category (Pages, Media, Routes, etc.) with custom priorities.
+
+## Requirements
+
+- PHP 8.2+
+- Symfony 7.0+ or 8.0+
+
+### Required for the UI component
+
+- [Tailwind CSS](https://tailwindcss.com/) for styling
+- `symfony/ux-live-component` and `symfony/ux-twig-component` for the GlobalSearch component
+- `symfony/ux-icons` for rendering icons
+- `symfony/asset-mapper` for Stimulus controller auto-discovery
+
+> The UI is **optional**. The search API works without any of the above.
 
 ## Installation
 
 ```bash
 composer require symkit/search-bundle
+```
+
+Install optional dependencies for the UI:
+
+```bash
+composer require symfony/ux-live-component symfony/ux-twig-component symfony/ux-icons
 ```
 
 ### Configure Assets (ImportMap)
@@ -28,6 +49,16 @@ return [
         'path' => 'search/global-search-modal_controller.js',
     ],
 ];
+```
+
+### Tailwind CSS Integration
+
+Add the bundle's templates to your Tailwind scan:
+
+```css
+@import "tailwindcss";
+
+@source "../../vendor/symkit/search-bundle/templates";
 ```
 
 ## Configuration
@@ -48,26 +79,17 @@ Define named engines, each with its own `ui` toggle:
 ```yaml
 # config/packages/symkit_search.yaml
 symkit_search:
+    default_engine: main      # explicit default (falls back to first declared)
     engines:
         main:
-            ui: true      # GlobalSearch component enabled
+            ui: true          # GlobalSearch component enabled
         admin:
-            ui: false     # API only, no UI component
+            ui: false         # API only, no UI component
 ```
 
 - If `engines` is omitted, a single `default` engine with `ui: true` is created.
-- The **first** engine is the default (aliased to `SearchServiceInterface`).
+- `default_engine` sets which engine is aliased to `SearchServiceInterface`. Falls back to the first declared engine.
 - Setting `engines: []` disables all search functionality.
-
-### Tailwind CSS Integration
-
-Add the bundle's templates to your Tailwind scan:
-
-```css
-@import "tailwindcss";
-
-@source "../../vendor/symkit/search-bundle/templates";
-```
 
 ## Usage
 
@@ -139,6 +161,7 @@ The component handles:
 - **Keyboard Shortcuts**: `Cmd+K` / `Ctrl+K` to open.
 - **Debounced Search**: Optimized typing experience.
 - **Results Grouping**: Grouped by category, sorted by priority.
+- **Accessibility**: ARIA roles, `aria-live` for screen readers.
 
 ### 3. Use the Search API Directly
 
@@ -166,6 +189,27 @@ final readonly class MyController
 }
 ```
 
+### 4. Listen to Search Events
+
+Hook into the search lifecycle with `PreSearchEvent` and `PostSearchEvent`:
+
+```php
+use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
+use Symkit\SearchBundle\Event\PreSearchEvent;
+use Symkit\SearchBundle\Event\PostSearchEvent;
+
+#[AsEventListener]
+final readonly class SearchAnalyticsListener
+{
+    public function __invoke(PostSearchEvent $event): void
+    {
+        // Log searches, filter results, add scoring, etc.
+    }
+}
+```
+
+`PreSearchEvent` lets you modify or cancel the query before providers are called. `PostSearchEvent` lets you filter, reorder, or enrich the results.
+
 ## Architecture
 
 ```mermaid
@@ -179,6 +223,8 @@ graph TD
     R --> UI["GlobalSearch Component"]
     UI -->|"engine='main'"| E1
     UI -->|"engine='admin'"| E2
+    E1 -.->|dispatch| PreSearch["PreSearchEvent"]
+    E1 -.->|dispatch| PostSearch["PostSearchEvent"]
 ```
 
 ## Advanced Customization
@@ -200,6 +246,10 @@ Customize the search modal UI by creating:
 ```
 templates/bundles/SymkitSearchBundle/components/GlobalSearch.html.twig
 ```
+
+### Dedicated Exceptions
+
+The bundle throws `EngineNotFoundException` (extends `InvalidArgumentException`) when requesting an unknown engine, making it easy to catch bundle-specific errors.
 
 ## Contributing
 

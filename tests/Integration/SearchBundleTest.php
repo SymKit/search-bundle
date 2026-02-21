@@ -10,9 +10,11 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Symkit\SearchBundle\Contract\SearchEngineRegistryInterface;
 use Symkit\SearchBundle\Contract\SearchServiceInterface;
+use Symkit\SearchBundle\Model\SearchResultGroup;
 use Symkit\SearchBundle\SearchBundle;
 use Symkit\SearchBundle\Service\SearchEngineRegistry;
 use Symkit\SearchBundle\Service\SearchService;
+use Symkit\SearchBundle\Tests\Integration\Fixtures\TestSearchProvider;
 
 #[CoversClass(SearchBundle::class)]
 final class SearchBundleTest extends KernelTestCase
@@ -97,5 +99,56 @@ final class SearchBundleTest extends KernelTestCase
         $container = self::getContainer();
 
         self::assertFalse($container->has(SearchServiceInterface::class));
+    }
+
+    public function testSearchProviderAutoconfiguration(): void
+    {
+        self::bootKernel(['config' => static function (TestKernel $kernel): void {
+            $kernel->addTestConfig(static function (\Symfony\Component\DependencyInjection\ContainerBuilder $container): void {
+                $container->register(TestSearchProvider::class, TestSearchProvider::class)
+                    ->setAutoconfigured(true);
+            });
+        }]);
+
+        $service = self::getContainer()->get(SearchServiceInterface::class);
+        \assert($service instanceof SearchServiceInterface);
+
+        $groups = iterator_to_array($service->search('home'));
+
+        self::assertCount(1, $groups);
+        self::assertInstanceOf(SearchResultGroup::class, $groups[0]);
+        self::assertSame('Pages', $groups[0]->category);
+    }
+
+    public function testSearchReturnsEmptyForNoMatch(): void
+    {
+        self::bootKernel(['config' => static function (TestKernel $kernel): void {
+            $kernel->addTestConfig(static function (\Symfony\Component\DependencyInjection\ContainerBuilder $container): void {
+                $container->register(TestSearchProvider::class, TestSearchProvider::class)
+                    ->setAutoconfigured(true);
+            });
+        }]);
+
+        $service = self::getContainer()->get(SearchServiceInterface::class);
+        \assert($service instanceof SearchServiceInterface);
+
+        $groups = iterator_to_array($service->search('zzz_no_match'));
+
+        self::assertSame([], $groups);
+    }
+
+    public function testDefaultEngineConfigOption(): void
+    {
+        self::bootKernel(['config' => static function (TestKernel $kernel): void {
+            $kernel->addTestConfig(__DIR__.'/Fixtures/config_default_engine.yaml');
+        }]);
+
+        $registry = self::getContainer()->get(SearchEngineRegistryInterface::class);
+        \assert($registry instanceof SearchEngineRegistryInterface);
+
+        $default = $registry->getDefault();
+        $admin = $registry->get('admin');
+
+        self::assertSame($default, $admin);
     }
 }
