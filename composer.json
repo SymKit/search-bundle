@@ -2,13 +2,14 @@
     "name": "symkit/search-bundle",
     "description": "A standalone search bundle for Symfony applications.",
     "type": "symfony-bundle",
-    "license": "MIT",
+    "version": "0.0.1",
     "authors": [
         {
             "name": "Symkit",
             "email": "s.dieunidou@gmail.com"
         }
     ],
+    "license": "MIT",
     "require": {
         "php": ">=8.2",
         "symfony/config": "^7.0 || ^8.0",
@@ -17,7 +18,7 @@
         "symfony/http-kernel": "^7.0 || ^8.0"
     },
     "require-dev": {
-        "deptrac/deptrac-src": "^2.0",
+        "deptrac/deptrac": "^2.0",
         "friendsofphp/php-cs-fixer": "^3.0",
         "infection/infection": "^0.29",
         "nyholm/symfony-bundle-test": "^3.0",
@@ -25,7 +26,9 @@
         "phpstan/phpstan": "^2.0",
         "phpunit/phpunit": "^10.0 || ^11.0",
         "symkit/bundle-ai-kit": "^0.0.3",
-        "symfony/phpunit-bridge": "^7.0 || ^8.0"
+        "symfony/phpunit-bridge": "^7.0 || ^8.0",
+        "symfony/ux-live-component": "^2.0",
+        "symfony/ux-twig-component": "^2.0"
     },
     "suggest": {
         "symfony/ux-live-component": "Required for the GlobalSearch live component UI.",

@@ -6,6 +6,9 @@ namespace Symkit\SearchBundle\Model;
 
 final readonly class SearchResultGroup
 {
+    /**
+     * @param iterable<SearchResult> $results
+     */
     public function __construct(
         public string $category,
         public iterable $results,

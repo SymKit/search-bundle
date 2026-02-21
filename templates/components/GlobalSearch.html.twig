@@ -15,7 +15,7 @@
             data-action="focus->live#action click->live#action input->live#action"
             data-live-action-param="open"
             autocomplete="off"
-            data-search--global-search-modal-target="trigger"
+            {{ stimulus_target('search--global-search-modal', 'trigger') }}
         >
         <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
             <kbd class="hidden sm:inline-flex items-center gap-1 rounded border border-gray-200 px-2 py-0.5 text-xs font-sans text-gray-400 dark:border-gray-700">
@@ -27,7 +27,7 @@
     {% if this.isOpen %}
     <div
         class="fixed inset-0 z-50 overflow-y-auto"
-        data-search--global-search-modal-target="backdrop"
+        {{ stimulus_target('search--global-search-modal', 'backdrop') }}
     >
         <div
             class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity dark:bg-gray-900 dark:bg-opacity-75"
@@ -47,8 +47,8 @@
                             class="block w-full border-0 bg-transparent py-4 pl-3 pr-4 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm dark:text-white"
                             autofocus
                             autocomplete="off"
-                            data-search--global-search-modal-target="input"
-                            data-action="input->search--global-search-modal#resetNavigation"
+                            {{ stimulus_target('search--global-search-modal', 'input') }}
+                            {{ stimulus_action('search--global-search-modal', 'resetNavigation', 'input') }}
                         >
                         <button
                             type="button"
@@ -93,7 +93,7 @@
                                                     class="flex items-start gap-3 rounded-md px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/50 group transition-all"
                                                     data-action="click->live#action"
                                                     data-live-action-param="close"
-                                                    data-search--global-search-modal-target="result"
+                                                    {{ stimulus_target('search--global-search-modal', 'result') }}
                                                 >
                                                     <div class="flex-shrink-0 mt-0.5">
                                                         {{ ux_icon(result.icon, {class: 'h-5 w-5 text-gray-400 dark:text-gray-500'}) }}

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Symkit\SearchBundle\Twig\Component;
 
-use Symkit\SearchBundle\Contract\SearchServiceInterface;
-use Symkit\SearchBundle\Model\SearchResultGroup;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\Attribute\PreReRender;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
+use Symkit\SearchBundle\Contract\SearchServiceInterface;
+use Symkit\SearchBundle\Model\SearchResultGroup;
 
 #[AsLiveComponent('GlobalSearch', template: '@SymkitSearch/components/GlobalSearch.html.twig')]
 final class GlobalSearch
@@ -49,7 +49,7 @@ final class GlobalSearch
     #[PreReRender]
     public function prepareResults(): void
     {
-        if ('' === mb_trim($this->query)) {
+        if ('' === trim($this->query)) {
             $this->results = [];
 
             return;

@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace Symkit\SearchBundle;
 
+use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+
+use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
+
+use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 use Symkit\SearchBundle\Contract\SearchProviderInterface;
 use Symkit\SearchBundle\Contract\SearchServiceInterface;
 use Symkit\SearchBundle\Service\SearchService;
 use Symkit\SearchBundle\Twig\Component\GlobalSearch;
-use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
-
-use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 
 class SearchBundle extends AbstractBundle
 {
@@ -42,7 +43,9 @@ class SearchBundle extends AbstractBundle
                 ->setArgument('$providers', tagged_iterator('symkit_search.provider'))
             ;
 
-            $builder->setAlias(SearchServiceInterface::class, SearchService::class);
+            $builder->setAlias(SearchServiceInterface::class, SearchService::class)
+                ->setPublic(true)
+            ;
 
             $builder->registerForAutoconfiguration(SearchProviderInterface::class)
                 ->addTag('symkit_search.provider')
@@ -59,7 +62,9 @@ class SearchBundle extends AbstractBundle
 
     public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void
     {
-        $config = $builder->getExtensionConfig('symkit_search');
+        $extension = $this->getContainerExtension();
+        \assert(null !== $extension);
+        $config = $builder->getExtensionConfig($extension->getAlias());
         $uiEnabled = true;
 
         foreach ($config as $subConfig) {
@@ -74,24 +79,35 @@ class SearchBundle extends AbstractBundle
 
         $bundleDir = $this->getPath();
 
-        $builder->prependExtensionConfig('twig', [
-            'paths' => [
-                $bundleDir . '/templates' => 'SymkitSearch',
-            ],
-        ]);
-
-        $builder->prependExtensionConfig('twig_component', [
-            'defaults' => [
-                'Symkit\SearchBundle\Twig\Component\\' => 'components/',
-            ],
-        ]);
-
-        $builder->prependExtensionConfig('framework', [
-            'asset_mapper' => [
+        if ($builder->hasExtension('twig')) {
+            $builder->prependExtensionConfig('twig', [
                 'paths' => [
-                    $bundleDir . '/assets/controllers' => 'search',
+                    $bundleDir.'/templates' => 'SymkitSearch',
                 ],
-            ],
-        ]);
+            ]);
+        }
+
+        if ($builder->hasExtension('twig_component')) {
+            $builder->prependExtensionConfig('twig_component', [
+                'defaults' => [
+                    'Symkit\SearchBundle\Twig\Component\\' => 'components/',
+                ],
+            ]);
+        }
+
+        if ($builder->hasExtension('framework')) {
+            $frameworkConfig = $builder->getExtensionConfig('framework');
+            $hasAssetMapper = class_exists(\Symfony\Component\AssetMapper\AssetMapperInterface::class);
+
+            if ($hasAssetMapper) {
+                $builder->prependExtensionConfig('framework', [
+                    'asset_mapper' => [
+                        'paths' => [
+                            $bundleDir.'/assets/controllers' => 'search',
+                        ],
+                    ],
+                ]);
+            }
+        }
     }
 }

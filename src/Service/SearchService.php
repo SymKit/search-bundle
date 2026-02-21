@@ -7,7 +7,6 @@ namespace Symkit\SearchBundle\Service;
 use Symkit\SearchBundle\Contract\SearchProviderInterface;
 use Symkit\SearchBundle\Contract\SearchServiceInterface;
 use Symkit\SearchBundle\Model\SearchResultGroup;
-use Traversable;
 
 final readonly class SearchService implements SearchServiceInterface
 {
@@ -24,13 +23,12 @@ final readonly class SearchService implements SearchServiceInterface
      */
     public function search(string $query): iterable
     {
-        if ('' === mb_trim($query)) {
+        if ('' === trim($query)) {
             return;
         }
 
         foreach ($this->getSortedProviders() as $provider) {
-            $results = $provider->search($query);
-            $resultsArray = $results instanceof Traversable ? iterator_to_array($results) : (array) $results;
+            $resultsArray = [...$provider->search($query)];
 
             if ([] !== $resultsArray) {
                 yield new SearchResultGroup(
@@ -47,9 +45,7 @@ final readonly class SearchService implements SearchServiceInterface
      */
     private function getSortedProviders(): array
     {
-        $providers = $this->providers instanceof Traversable
-            ? iterator_to_array($this->providers)
-            : (array) $this->providers;
+        $providers = [...$this->providers];
 
         usort($providers, static fn (SearchProviderInterface $a, SearchProviderInterface $b): int => $a->getPriority() <=> $b->getPriority());
 

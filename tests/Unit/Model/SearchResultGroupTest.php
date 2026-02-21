@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Symkit\SearchBundle\Tests\Unit\Model;
 
+use Generator;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symkit\SearchBundle\Model\SearchResult;
@@ -31,7 +32,7 @@ final class SearchResultGroupTest extends TestCase
 
     public function testAcceptsIterableResults(): void
     {
-        $generator = static function (): \Generator {
+        $generator = static function (): Generator {
             yield new SearchResult('Test', 'sub', '/test', 'icon');
         };
 

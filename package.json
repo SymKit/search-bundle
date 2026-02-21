@@ -1,0 +1,14 @@
+{
+    "name": "@symkit/search-bundle",
+    "description": "Stimulus controllers for symkit/search-bundle",
+    "private": true,
+    "symfony": {
+        "controllers": {
+            "global-search-modal": {
+                "main": "dist/global-search-modal_controller.js",
+                "fetch": "lazy",
+                "enabled": true
+            }
+        }
+    }
+}

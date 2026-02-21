@@ -7,7 +7,6 @@
     },
     "minMsi": 70,
     "minCoveredMsi": 80,
-    "threads": "max",
     "testFramework": "phpunit",
     "testFrameworkOptions": "--testsuite=Unit"
 }

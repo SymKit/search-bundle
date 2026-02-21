@@ -2,6 +2,9 @@
 /composer.lock
 /.php-cs-fixer.cache
 /.phpstan-cache/
+/.deptrac.cache
 /infection.log
 /infection-summary.log
 /.phpunit.result.cache
+/phpunit.xml
+/phpstan.neon

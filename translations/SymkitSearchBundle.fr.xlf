@@ -12,7 +12,7 @@
             </trans-unit>
             <trans-unit id="search.modal.placeholder">
                 <source>search.modal.placeholder</source>
-                <target>Rechercher des pages, routes, medias...</target>
+                <target>Rechercher des pages, routes, médias...</target>
             </trans-unit>
             <trans-unit id="search.close">
                 <source>search.close</source>
@@ -24,11 +24,11 @@
             </trans-unit>
             <trans-unit id="search.no_results.title">
                 <source>search.no_results.title</source>
-                <target>Aucun resultat</target>
+                <target>Aucun résultat</target>
             </trans-unit>
             <trans-unit id="search.no_results.hint">
                 <source>search.no_results.hint</source>
-                <target>Essayez d'autres mots-cles</target>
+                <target>Essayez d'autres mots-clés</target>
             </trans-unit>
             <trans-unit id="search.keyboard.navigate">
                 <source>search.keyboard.navigate</source>

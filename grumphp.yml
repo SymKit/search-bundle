@@ -1,10 +1,15 @@
 grumphp:
     tasks:
         phpstan:
-            config: phpstan.neon.dist
+            configuration: phpstan.neon.dist
             memory_limit: 512M
+            use_grumphp_paths: false
         phpcsfixer:
             config: .php-cs-fixer.dist.php
         phpunit:
-            config: phpunit.xml.dist
-        composer_audit: ~
+            config_file: phpunit.xml.dist
+        infection:
+            min_covered_msi: 80
+            only_covered: true
+            threads: 4
+            test_framework: phpunit

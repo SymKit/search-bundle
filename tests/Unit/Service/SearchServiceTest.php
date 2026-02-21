@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Symkit\SearchBundle\Tests\Unit\Service;
 
+use Generator;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symkit\SearchBundle\Contract\SearchProviderInterface;
@@ -25,7 +26,12 @@ final class SearchServiceTest extends TestCase
 
     public function testSearchReturnsEmptyForWhitespaceQuery(): void
     {
-        $service = new SearchService([]);
+        $provider = $this->createProvider(
+            'Pages',
+            10,
+            [new SearchResult('Hit', 'sub', '/hit', 'icon')],
+        );
+        $service = new SearchService([$provider]);
 
         $results = iterator_to_array($service->search('   '));
 
@@ -94,7 +100,7 @@ final class SearchServiceTest extends TestCase
         $provider = $this->createMock(SearchProviderInterface::class);
         $provider->method('getCategory')->willReturn('Gen');
         $provider->method('getPriority')->willReturn(10);
-        $provider->method('search')->willReturnCallback(static function (): \Generator {
+        $provider->method('search')->willReturnCallback(static function (): Generator {
             yield new SearchResult('Generated', 'sub', '/gen', 'icon');
         });
 
