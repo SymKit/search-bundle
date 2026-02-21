@@ -1,5 +1,9 @@
 # Search Bundle
 
+[![CI](https://github.com/symkit/search-bundle/actions/workflows/ci.yml/badge.svg)](https://github.com/symkit/search-bundle/actions)
+[![Latest Version](https://img.shields.io/packagist/v/symkit/search-bundle.svg)](https://packagist.org/packages/symkit/search-bundle)
+[![PHPStan Level 9](https://img.shields.io/badge/PHPStan-level%209-brightgreen.svg)](https://phpstan.org/)
+
 A modern, memory-efficient global search bundle for Symfony applications. Supports **multiple named search engines**, each with its own providers (or shared providers), and includes a ready-to-use UI built with Symfony UX Live Components and Tailwind CSS.
 
 ## Features
