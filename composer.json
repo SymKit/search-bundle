@@ -1,0 +1,67 @@
+{
+    "name": "symkit/search-bundle",
+    "description": "A standalone search bundle for Symfony applications.",
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Symkit",
+            "email": "s.dieunidou@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=8.2",
+        "symfony/config": "^7.0 || ^8.0",
+        "symfony/dependency-injection": "^7.0 || ^8.0",
+        "symfony/framework-bundle": "^7.0 || ^8.0",
+        "symfony/http-kernel": "^7.0 || ^8.0"
+    },
+    "require-dev": {
+        "deptrac/deptrac-src": "^2.0",
+        "friendsofphp/php-cs-fixer": "^3.0",
+        "infection/infection": "^0.29",
+        "nyholm/symfony-bundle-test": "^3.0",
+        "phpro/grumphp": "^2.0",
+        "phpstan/phpstan": "^2.0",
+        "phpunit/phpunit": "^10.0 || ^11.0",
+        "symkit/bundle-ai-kit": "^0.0.3",
+        "symfony/phpunit-bridge": "^7.0 || ^8.0"
+    },
+    "suggest": {
+        "symfony/ux-live-component": "Required for the GlobalSearch live component UI.",
+        "symfony/ux-twig-component": "Required for the GlobalSearch Twig component.",
+        "symfony/ux-icons": "Required for rendering icons in the search UI.",
+        "symfony/asset-mapper": "Required for AssetMapper integration (Stimulus controllers).",
+        "symfony/translation": "Required for translatable search UI strings."
+    },
+    "autoload": {
+        "psr-4": {
+            "Symkit\\SearchBundle\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Symkit\\SearchBundle\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "symkit/bundle-ai-kit": true,
+            "infection/extension-installer": true,
+            "phpro/grumphp": true
+        },
+        "sort-packages": true
+    },
+    "extra": {
+        "bundle-ai-kit": {
+            "editors": ["cursor"],
+            "skills": [
+                "symfony-bundle-core",
+                "symfony-bundle-ux",
+                "symfony-bundle-doctrine",
+                "symfony-bundle-flex",
+                "symfony-bundle-quality"
+            ]
+        }
+    }
+}

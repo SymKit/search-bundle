@@ -1,0 +1,10 @@
+grumphp:
+    tasks:
+        phpstan:
+            config: phpstan.neon.dist
+            memory_limit: 512M
+        phpcsfixer:
+            config: .php-cs-fixer.dist.php
+        phpunit:
+            config: phpunit.xml.dist
+        composer_audit: ~

@@ -1,0 +1,25 @@
+deptrac:
+    paths:
+        - ./src
+    layers:
+        - name: Contract
+          collectors:
+            - type: directory
+              value: src/Contract/.*
+        - name: Model
+          collectors:
+            - type: directory
+              value: src/Model/.*
+        - name: Service
+          collectors:
+            - type: directory
+              value: src/Service/.*
+        - name: Twig
+          collectors:
+            - type: directory
+              value: src/Twig/.*
+    ruleset:
+        Contract: [Model]
+        Model: []
+        Service: [Contract, Model]
+        Twig: [Contract, Model]

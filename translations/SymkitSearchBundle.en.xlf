@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+    <file source-language="en" datatype="plaintext" original="SymkitSearchBundle">
+        <body>
+            <trans-unit id="search.label">
+                <source>search.label</source>
+                <target>Search</target>
+            </trans-unit>
+            <trans-unit id="search.placeholder">
+                <source>search.placeholder</source>
+                <target>Search...</target>
+            </trans-unit>
+            <trans-unit id="search.modal.placeholder">
+                <source>search.modal.placeholder</source>
+                <target>Search pages, routes, media...</target>
+            </trans-unit>
+            <trans-unit id="search.close">
+                <source>search.close</source>
+                <target>Close</target>
+            </trans-unit>
+            <trans-unit id="search.empty.hint">
+                <source>search.empty.hint</source>
+                <target>Type to search across pages, routes, media, and redirects</target>
+            </trans-unit>
+            <trans-unit id="search.no_results.title">
+                <source>search.no_results.title</source>
+                <target>No results found</target>
+            </trans-unit>
+            <trans-unit id="search.no_results.hint">
+                <source>search.no_results.hint</source>
+                <target>Try different keywords</target>
+            </trans-unit>
+            <trans-unit id="search.keyboard.navigate">
+                <source>search.keyboard.navigate</source>
+                <target>to navigate</target>
+            </trans-unit>
+            <trans-unit id="search.keyboard.select">
+                <source>search.keyboard.select</source>
+                <target>to select</target>
+            </trans-unit>
+            <trans-unit id="search.keyboard.close">
+                <source>search.keyboard.close</source>
+                <target>to close</target>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>

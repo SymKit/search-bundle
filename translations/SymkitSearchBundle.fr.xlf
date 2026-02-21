@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+    <file source-language="en" target-language="fr" datatype="plaintext" original="SymkitSearchBundle">
+        <body>
+            <trans-unit id="search.label">
+                <source>search.label</source>
+                <target>Rechercher</target>
+            </trans-unit>
+            <trans-unit id="search.placeholder">
+                <source>search.placeholder</source>
+                <target>Rechercher...</target>
+            </trans-unit>
+            <trans-unit id="search.modal.placeholder">
+                <source>search.modal.placeholder</source>
+                <target>Rechercher des pages, routes, medias...</target>
+            </trans-unit>
+            <trans-unit id="search.close">
+                <source>search.close</source>
+                <target>Fermer</target>
+            </trans-unit>
+            <trans-unit id="search.empty.hint">
+                <source>search.empty.hint</source>
+                <target>Saisissez un terme pour rechercher dans les pages, routes, medias et redirections</target>
+            </trans-unit>
+            <trans-unit id="search.no_results.title">
+                <source>search.no_results.title</source>
+                <target>Aucun resultat</target>
+            </trans-unit>
+            <trans-unit id="search.no_results.hint">
+                <source>search.no_results.hint</source>
+                <target>Essayez d'autres mots-cles</target>
+            </trans-unit>
+            <trans-unit id="search.keyboard.navigate">
+                <source>search.keyboard.navigate</source>
+                <target>pour naviguer</target>
+            </trans-unit>
+            <trans-unit id="search.keyboard.select">
+                <source>search.keyboard.select</source>
+                <target>pour selectionner</target>
+            </trans-unit>
+            <trans-unit id="search.keyboard.close">
+                <source>search.keyboard.close</source>
+                <target>pour fermer</target>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>
