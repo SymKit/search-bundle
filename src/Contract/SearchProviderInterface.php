@@ -8,7 +8,7 @@ use Symkit\SearchBundle\Model\SearchResult;
 
 interface SearchProviderInterface
 {
-    public const int DEFAULT_PRIORITY = 50;
+    public const DEFAULT_PRIORITY = 50;
 
     /**
      * @return iterable<SearchResult>
