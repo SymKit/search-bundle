@@ -2,7 +2,6 @@
     "name": "symkit/search-bundle",
     "description": "A standalone search bundle for Symfony applications.",
     "type": "symfony-bundle",
-    "version": "0.0.1",
     "authors": [
         {
             "name": "Symkit",
