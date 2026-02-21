@@ -9,7 +9,7 @@ use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\Attribute\PreReRender;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
-use Symkit\SearchBundle\Contract\SearchServiceInterface;
+use Symkit\SearchBundle\Contract\SearchEngineRegistryInterface;
 use Symkit\SearchBundle\Model\SearchResultGroup;
 
 #[AsLiveComponent('GlobalSearch', template: '@SymkitSearch/components/GlobalSearch.html.twig')]
@@ -23,13 +23,16 @@ final class GlobalSearch
     #[LiveProp(writable: true)]
     public bool $isOpen = false;
 
+    #[LiveProp]
+    public string $engine = 'default';
+
     /**
      * @var array<SearchResultGroup>
      */
     public array $results = [];
 
     public function __construct(
-        private readonly SearchServiceInterface $searchService,
+        private readonly SearchEngineRegistryInterface $registry,
     ) {
     }
 
@@ -55,7 +58,7 @@ final class GlobalSearch
             return;
         }
 
-        $results = $this->searchService->search($this->query);
+        $results = $this->registry->get($this->engine)->search($this->query);
         $this->results = \is_array($results) ? $results : iterator_to_array($results);
     }
 

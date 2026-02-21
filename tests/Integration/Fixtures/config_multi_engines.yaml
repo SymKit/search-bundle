@@ -1,0 +1,6 @@
+symkit_search:
+    engines:
+        main:
+            ui: true
+        admin:
+            ui: false

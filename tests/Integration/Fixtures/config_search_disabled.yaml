@@ -1,3 +1,2 @@
-search:
-    search: false
-    ui: false
+symkit_search:
+    engines: []

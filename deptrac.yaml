@@ -2,10 +2,18 @@ deptrac:
     paths:
         - ./src
     layers:
+        - name: Attribute
+          collectors:
+            - type: directory
+              value: src/Attribute/.*
         - name: Contract
           collectors:
             - type: directory
               value: src/Contract/.*
+        - name: DependencyInjection
+          collectors:
+            - type: directory
+              value: src/DependencyInjection/.*
         - name: Model
           collectors:
             - type: directory
@@ -19,7 +27,9 @@ deptrac:
             - type: directory
               value: src/Twig/.*
     ruleset:
+        Attribute: []
         Contract: [Model]
+        DependencyInjection: [Service]
         Model: []
         Service: [Contract, Model]
         Twig: [Contract, Model]

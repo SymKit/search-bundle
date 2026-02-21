@@ -8,8 +8,10 @@ use Nyholm\BundleTest\TestKernel;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\HttpKernel\KernelInterface;
+use Symkit\SearchBundle\Contract\SearchEngineRegistryInterface;
 use Symkit\SearchBundle\Contract\SearchServiceInterface;
 use Symkit\SearchBundle\SearchBundle;
+use Symkit\SearchBundle\Service\SearchEngineRegistry;
 use Symkit\SearchBundle\Service\SearchService;
 
 #[CoversClass(SearchBundle::class)]
@@ -49,7 +51,7 @@ final class SearchBundleTest extends KernelTestCase
         self::assertInstanceOf(SearchBundle::class, $bundles['SearchBundle']);
     }
 
-    public function testSearchServiceIsRegistered(): void
+    public function testDefaultEngineIsRegistered(): void
     {
         self::bootKernel();
 
@@ -59,7 +61,34 @@ final class SearchBundleTest extends KernelTestCase
         );
     }
 
-    public function testSearchServiceCanBeDisabled(): void
+    public function testRegistryIsRegistered(): void
+    {
+        self::bootKernel();
+
+        $registry = self::getContainer()->get(SearchEngineRegistryInterface::class);
+
+        self::assertInstanceOf(SearchEngineRegistry::class, $registry);
+        self::assertTrue($registry->has('default'));
+        self::assertInstanceOf(SearchService::class, $registry->getDefault());
+    }
+
+    public function testMultipleEngines(): void
+    {
+        self::bootKernel(['config' => static function (TestKernel $kernel): void {
+            $kernel->addTestConfig(__DIR__.'/Fixtures/config_multi_engines.yaml');
+        }]);
+
+        $registry = self::getContainer()->get(SearchEngineRegistryInterface::class);
+        \assert($registry instanceof SearchEngineRegistryInterface);
+
+        self::assertTrue($registry->has('main'));
+        self::assertTrue($registry->has('admin'));
+        self::assertFalse($registry->has('nonexistent'));
+        self::assertInstanceOf(SearchService::class, $registry->get('main'));
+        self::assertInstanceOf(SearchService::class, $registry->get('admin'));
+    }
+
+    public function testEmptyEnginesDisablesSearch(): void
     {
         self::bootKernel(['config' => static function (TestKernel $kernel): void {
             $kernel->addTestConfig(__DIR__.'/Fixtures/config_search_disabled.yaml');

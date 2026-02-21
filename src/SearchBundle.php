@@ -5,54 +5,97 @@ declare(strict_types=1);
 namespace Symkit\SearchBundle;
 
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
+use Symfony\Component\DependencyInjection\Argument\ServiceLocatorArgument;
+use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-
-use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
-
+use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
+use Symkit\SearchBundle\Attribute\AsSearchProvider;
+use Symkit\SearchBundle\Contract\SearchEngineRegistryInterface;
 use Symkit\SearchBundle\Contract\SearchProviderInterface;
 use Symkit\SearchBundle\Contract\SearchServiceInterface;
+use Symkit\SearchBundle\DependencyInjection\Compiler\SearchProviderPass;
+use Symkit\SearchBundle\Service\SearchEngineRegistry;
 use Symkit\SearchBundle\Service\SearchService;
 use Symkit\SearchBundle\Twig\Component\GlobalSearch;
 
 class SearchBundle extends AbstractBundle
 {
+    protected string $extensionAlias = 'symkit_search';
+
     public function configure(DefinitionConfigurator $definition): void
     {
         $definition->rootNode()
             ->children()
-                ->booleanNode('search')
-                    ->defaultTrue()
-                    ->info('Enable the search service and provider registration (API).')
-                ->end()
-                ->booleanNode('ui')
-                    ->defaultTrue()
-                    ->info('Enable the GlobalSearch component, Twig namespace, and AssetMapper paths.')
+                ->arrayNode('engines')
+                    ->info('Named search engines. Each engine groups its own providers.')
+                    ->useAttributeAsKey('name')
+                    ->arrayPrototype()
+                        ->children()
+                            ->booleanNode('ui')
+                                ->defaultTrue()
+                                ->info('Enable the GlobalSearch component for this engine.')
+                            ->end()
+                        ->end()
+                    ->end()
+                    ->defaultValue(['default' => ['ui' => true]])
                 ->end()
             ->end();
     }
 
     /**
-     * @param array{search: bool, ui: bool} $config
+     * @param array{engines: array<string, array{ui: bool}>} $config
      */
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
-        if ($config['search']) {
-            $builder->register(SearchService::class)
-                ->setArgument('$providers', tagged_iterator('symkit_search.provider'))
+        $engines = $config['engines'];
+
+        $builder->setParameter('symkit_search.engines', $engines);
+
+        $builder->registerForAutoconfiguration(SearchProviderInterface::class)
+            ->addTag('symkit_search.provider')
+        ;
+
+        $builder->registerAttributeForAutoconfiguration(
+            AsSearchProvider::class,
+            static function (\Symfony\Component\DependencyInjection\ChildDefinition $definition, AsSearchProvider $attribute): void {
+                $tag = ['engine' => $attribute->engine];
+                $definition->addTag('symkit_search.provider', array_filter($tag, static fn (mixed $v): bool => null !== $v));
+            },
+        );
+
+        $engineRefs = [];
+        $firstEngine = array_key_first($engines);
+
+        foreach ($engines as $name => $engineConfig) {
+            $serviceId = 'symkit_search.engine.'.$name;
+
+            $builder->register($serviceId, SearchService::class)
+                ->setArgument('$providers', new TaggedIteratorArgument('symkit_search.provider'))
             ;
 
-            $builder->setAlias(SearchServiceInterface::class, SearchService::class)
+            $engineRefs[$name] = new Reference($serviceId);
+        }
+
+        $builder->register(SearchEngineRegistry::class)
+            ->setArgument('$engines', new ServiceLocatorArgument($engineRefs))
+            ->setArgument('$defaultEngine', $firstEngine)
+        ;
+
+        $builder->setAlias(SearchEngineRegistryInterface::class, SearchEngineRegistry::class)
+            ->setPublic(true)
+        ;
+
+        if (null !== $firstEngine) {
+            $builder->setAlias(SearchServiceInterface::class, 'symkit_search.engine.'.$firstEngine)
                 ->setPublic(true)
-            ;
-
-            $builder->registerForAutoconfiguration(SearchProviderInterface::class)
-                ->addTag('symkit_search.provider')
             ;
         }
 
-        if ($config['search'] && $config['ui']) {
+        $hasUi = array_filter($engines, static fn (array $c): bool => $c['ui']);
+
+        if ([] !== $hasUi) {
             $builder->register(GlobalSearch::class)
                 ->setAutoconfigured(true)
                 ->setAutowired(true)
@@ -60,20 +103,34 @@ class SearchBundle extends AbstractBundle
         }
     }
 
+    public function build(ContainerBuilder $builder): void
+    {
+        $builder->addCompilerPass(new SearchProviderPass());
+    }
+
     public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void
     {
-        $extension = $this->getContainerExtension();
-        \assert(null !== $extension);
-        $config = $builder->getExtensionConfig($extension->getAlias());
-        $uiEnabled = true;
+        $config = $builder->getExtensionConfig($this->extensionAlias);
+        $hasUi = false;
 
         foreach ($config as $subConfig) {
-            if (isset($subConfig['ui'])) {
-                $uiEnabled = (bool) $subConfig['ui'];
+            if (!isset($subConfig['engines']) || !\is_array($subConfig['engines'])) {
+                continue;
+            }
+
+            foreach ($subConfig['engines'] as $engineConfig) {
+                if (\is_array($engineConfig) && ($engineConfig['ui'] ?? true)) {
+                    $hasUi = true;
+                    break 2;
+                }
             }
         }
 
-        if (!$uiEnabled) {
+        if ([] === $config) {
+            $hasUi = true;
+        }
+
+        if (!$hasUi) {
             return;
         }
 
@@ -95,19 +152,14 @@ class SearchBundle extends AbstractBundle
             ]);
         }
 
-        if ($builder->hasExtension('framework')) {
-            $frameworkConfig = $builder->getExtensionConfig('framework');
-            $hasAssetMapper = class_exists(\Symfony\Component\AssetMapper\AssetMapperInterface::class);
-
-            if ($hasAssetMapper) {
-                $builder->prependExtensionConfig('framework', [
-                    'asset_mapper' => [
-                        'paths' => [
-                            $bundleDir.'/assets/controllers' => 'search',
-                        ],
+        if ($builder->hasExtension('framework') && class_exists(\Symfony\Component\AssetMapper\AssetMapperInterface::class)) {
+            $builder->prependExtensionConfig('framework', [
+                'asset_mapper' => [
+                    'paths' => [
+                        $bundleDir.'/assets/controllers' => 'search',
                     ],
-                ]);
-            }
+                ],
+            ]);
         }
     }
 }
