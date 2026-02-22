@@ -1,4 +1,4 @@
-.PHONY: help install test phpstan cs-fix cs-check infection deptrac quality security-check lint ci install-hooks
+.PHONY: help install test phpstan cs-fix cs-check infection deptrac quality security-check lint ci
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -25,7 +25,7 @@ deptrac: ## Architecture enforcement
 	vendor/bin/deptrac analyse
 
 security-check: ## Dependency security audit
-	composer audit
+	composer audit --abandoned=report
 
 lint: ## Lint translation files
 	@test -d translations && find translations -name '*.xlf' -exec xmllint --noout {} + 2>/dev/null || true
@@ -33,8 +33,3 @@ lint: ## Lint translation files
 quality: cs-check phpstan deptrac lint test infection ## Full quality pipeline
 
 ci: security-check quality ## Full CI pipeline (security + quality)
-
-install-hooks: ## Install git hooks (strips Co-authored-by from commits)
-	cp scripts/git-hooks/commit-msg .git/hooks/commit-msg
-	chmod +x .git/hooks/commit-msg
-	@echo "Git hooks installed."

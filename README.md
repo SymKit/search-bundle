@@ -259,6 +259,5 @@ The bundle throws `EngineNotFoundException` (extends `InvalidArgumentException`)
 
 ```bash
 make install          # Install dependencies
-make install-hooks    # Install git hooks
 make quality          # Run full quality pipeline (cs + phpstan + deptrac + tests + infection)
 ```

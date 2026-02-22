@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Symkit\SearchBundle\Twig\Component;
 
-use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\Attribute\PreReRender;
@@ -12,7 +11,6 @@ use Symfony\UX\LiveComponent\DefaultActionTrait;
 use Symkit\SearchBundle\Contract\SearchEngineRegistryInterface;
 use Symkit\SearchBundle\Model\SearchResultGroup;
 
-#[AsLiveComponent('GlobalSearch', template: '@SymkitSearch/components/GlobalSearch.html.twig')]
 final class GlobalSearch
 {
     use DefaultActionTrait;

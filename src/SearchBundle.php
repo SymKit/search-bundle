@@ -66,7 +66,7 @@ class SearchBundle extends AbstractBundle
             AsSearchProvider::class,
             static function (\Symfony\Component\DependencyInjection\ChildDefinition $definition, AsSearchProvider $attribute): void {
                 $tag = ['engine' => $attribute->engine];
-                $definition->addTag('symkit_search.provider', array_filter($tag, static fn (mixed $v): bool => null !== $v));
+                $definition->addTag('symkit_search.provider', array_filter($tag, static fn (?string $v): bool => null !== $v));
             },
         );
 
@@ -108,9 +108,21 @@ class SearchBundle extends AbstractBundle
         $hasUi = array_filter($engines, static fn (array $c): bool => $c['ui']);
 
         if ([] !== $hasUi) {
+            $liveComponentConfig = [
+                'key' => 'GlobalSearch',
+                'template' => '@SymkitSearch/components/GlobalSearch.html.twig',
+                'expose_public_props' => true,
+                'attributes_var' => 'attributes',
+                'live' => true,
+                'route' => 'ux_live_component',
+                'method' => 'post',
+                'url_reference_type' => 1, // UrlGeneratorInterface::ABSOLUTE_PATH
+            ];
             $builder->register(GlobalSearch::class)
                 ->setAutoconfigured(true)
                 ->setAutowired(true)
+                ->addTag('twig.component', $liveComponentConfig)
+                ->addTag('controller.service_arguments')
             ;
         }
     }
