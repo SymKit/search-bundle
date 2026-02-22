@@ -46,6 +46,22 @@ alwaysApply: true
 - `translations/` at bundle root for XLIFF files (auto-discovered by Symfony)
 - Never extend `AbstractController` — inject specific services
 
+## README
+
+The `README.md` must always include the following badges at the top (replace `{vendor}/{repo}` with the actual repository name):
+
+```markdown
+[![CI](https://github.com/{vendor}/{repo}/actions/workflows/ci.yml/badge.svg)](https://github.com/{vendor}/{repo}/actions)
+[![Latest Version](https://img.shields.io/packagist/v/{vendor}/{repo}.svg)](https://packagist.org/packages/{vendor}/{repo})
+[![PHPStan Level 9](https://img.shields.io/badge/PHPStan-level%209-brightgreen.svg)](https://phpstan.org/)
+```
+
+## Services (contexte bundle)
+
+- Dans un bundle, **ne pas utiliser les attributs** pour déclarer les services (tags, listeners, composants Twig, etc.).
+- Tout enregistrement de services, tags et options doit se faire **en configuration** : dans `loadExtension()` du bundle (AbstractBundle) ou dans les fichiers XML de définition de services.
+- Exemples à éviter dans le code du bundle : `#[AsEventListener]`, `#[AsTwigComponent]`, `#[AsLiveComponent]`, tags sur les classes. À la place : appels à `$container->register()`, `->addTag()`, et déclarations explicites dans l’extension ou le XML.
+
 ## Dependencies
 
 - Symfony packages: always `^7.0 || ^8.0` (semver, never `7.*|8.*`)
@@ -53,20 +69,65 @@ alwaysApply: true
 - Never embed vendor code in `src/`
 - Composer `allow-plugins`: configure `infection/extension-installer` and `phpro/grumphp` in `composer.json`
 
+## Configurability
+
+Every feature of a bundle must be **activatable, deactivatable, and configurable** via the bundle's `configure()` tree. The host app must be able to:
+
+- Enable/disable any feature (Doctrine, controllers, Twig components, listeners, etc.) via a boolean config key
+- Override Doctrine **entity classes** and **repository classes** in config — the bundle must never hardcode its own entity/repository classes in services or queries; always resolve them from configuration
+- Customize any default value (table prefix, translation domain, route prefix, etc.)
+
+Example pattern in `configure()`:
+
+```php
+->arrayNode('entity')
+    ->addDefaultsIfNotSet()
+    ->children()
+        ->scalarNode('article_class')->defaultValue(Article::class)->end()
+        ->scalarNode('article_repository_class')->defaultValue(ArticleRepository::class)->end()
+    ->end()
+->end()
+```
+
+Then in `loadExtension()`, bind these classes as parameters and inject them into services. Never use `Article::class` directly in service code — always use the configured class.
+
+## Translations
+
+Every user-facing string must be translated — no hardcoded text in templates, controllers, forms, validators, or flash messages.
+
+- Extract **all** strings: Twig templates (`{% trans %}`, `|trans`), form labels/help/placeholders, constraint messages, controller flash messages, error pages, email subjects/bodies
+- XLIFF format in `translations/` at bundle root, domain `{Vendor}{Name}Bundle`
+- Always provide at least `en` and `fr` locales
+- Run `translation:extract` regularly to catch missing keys
+- Form labels: always explicit `'label' => 'form.field_name'`, never rely on auto-generated labels
+- Validator messages: always use translation keys (`'message' => 'validation.field.constraint'`)
+
 ## Anti-Patterns
 
 - Using `Bundle` instead of `AbstractBundle` with separate Extension/Configuration classes
+- **Using attributes for service/tag registration in bundle code** — use config/loadExtension() instead
 - `new Configuration()` or `new Service()` — always use DI or AbstractBundle built-in methods
 - Public services by default, missing service ID prefix, YAML services
 - Setter injection, business logic in controller/entity
 - Hardcoded parameters instead of `configure()` + env vars
 - Symfony constraints `7.*|8.*` instead of `^7.0 || ^8.0`
+- Hardcoded entity/repository classes — always configurable via bundle config
+- Non-translatable user-facing strings — everything must go through the translation system
+- Features that cannot be disabled — every feature must have a config toggle
 
 ## Commits
 
 When committing, never reference the agent or any co-author (no Co-authored-by, Signed-off-by from the AI, or similar). Commit messages and metadata must describe only the change, with no self-attribution. Never use `git commit --trailer` or add Co-authored-by to commits.
 
-If the IDE (e.g. Cursor) keeps adding Co-authored-by automatically, add a **commit-msg hook** that strips it: put a script in `scripts/git-hooks/commit-msg` that removes lines matching `Co-authored-by:` (e.g. `grep -v -E '^[[:space:]]*Co-authored-by:' "$1"` into a temp file then replace the message file). Provide `make install-hooks` that copies `scripts/git-hooks/commit-msg` to `.git/hooks/commit-msg` and makes it executable. Document `make install-hooks` in README Contributing so contributors can install it too. This applies to any project where the agent or IDE must not appear in commit history.
+## Cleanup — Legacy commit-msg hook
+
+If the project contains any of the following legacy artefacts, remove them:
+
+- `scripts/git-hooks/commit-msg` — delete the file (and `scripts/git-hooks/` directory if empty)
+- `install-hooks` target in the Makefile — remove the target and its `.PHONY` entry
+- Any `make install-hooks` mention in README or other documentation
+
+These artefacts are obsolete and must be cleaned up when encountered.
 
 ## After Every Change — Makefile First
 
@@ -74,6 +135,7 @@ Always use Makefile targets. Never call `vendor/bin/` directly.
 
 - `make cs-fix` — fix code style
 - `make phpstan` — static analysis
+- `make lint` — composer validate --strict
 - `make test` — run tests
 - `make quality` — full pipeline (cs-check + phpstan + deptrac + lint + test + infection)
 - `make ci` — security-check + quality
@@ -85,3 +147,4 @@ Always use Makefile targets. Never call `vendor/bin/` directly.
 - `symfony-bundle-doctrine`: entities, XML mapping
 - `symfony-bundle-flex`: Flex recipes
 - `symfony-bundle-quality`: Makefile, PHPStan, GrumPHP, Infection, Deptrac, CI
+
